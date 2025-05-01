@@ -10,16 +10,41 @@
 #include <QFile>
 #include <QPushButton>
 #include <QLabel>
-
+#include <QStandardItemModel>
+#include <QFileDialog>
+#include <QMediaPlayer>
+#include <QUrl>
+#include <QFileInfo>
+#include <QMediaDevices>
+#include <QAudioDevice>
+#include <QAudioOutput>
+#include <QSettings>
 
 #include "model/itemdelegate.h"
+#include "model/sounditemwidget.h"
+
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    // Determine the path to items.txt
+    // load saved audio output device
+    {
+        QSettings settings("MyCompany", "ToDo");
+        QString savedId = settings.value("audioOutput").toString();
+        auto devices = QMediaDevices::audioOutputs();
+        for (const auto &dev : devices) {
+            if (dev.id() == savedId) {
+                SoundItemWidget::setAudioDevice(dev);
+                break;
+            }
+        }
+    }
+
+    // connect output action
+    connect(ui->actionOutput, &QAction::triggered, this, &MainWindow::chooseAudioOutput);
+
     QString appDir = QCoreApplication::applicationDirPath();
     QDir projectRootDir(appDir);
     projectRootDir.cdUp();
@@ -28,16 +53,21 @@ MainWindow::MainWindow(QWidget *parent)
 
     qDebug() << "Looking for items.txt at:" << filePath;
 
-    // Load items into the view model
     itemVM.setFilePath(filePath.toStdString());
     if (!itemVM.loadFromFile(filePath.toStdString())) {
         QMessageBox::warning(this, "Error", "Failed to load items from file.");
     } else {
-        refreshTable();
+        refreshList();
     }
 
-    // Connect cellChanged signal for updates
-    connect(ui->tableWidget, &QTableWidget::cellChanged, this, &MainWindow::handleItemUpdate);
+    connect(ui->listView, &QListView::clicked, this, [this](const QModelIndex &index) {
+        int itemIndex = index.row();
+        QString itemName = listModel->item(itemIndex)->text();
+        int status = listModel->item(itemIndex)->data(Qt::UserRole).toInt();
+        qDebug() << "Item clicked:" << itemName << "Status:" << status;
+
+        handleItemEdit(itemIndex);
+    });
 }
 
 MainWindow::~MainWindow()
@@ -45,135 +75,101 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-void MainWindow::refreshTable()
+void MainWindow::refreshList()
 {
-    ui->tableWidget->clear();
-    ui->tableWidget->setRowCount(itemVM.getItemCount());
-    ui->tableWidget->setColumnCount(3); // Name, Status, Actions
-    ui->tableWidget->setHorizontalHeaderLabels({"Name", "Status", "Actions"});
+    if (!listModel) {
+        listModel = new QStandardItemModel(this);
+        ui->listView->setModel(listModel);
+    }
+    listModel->clear();
 
     for (size_t i = 0; i < itemVM.getItemCount(); ++i) {
-        const auto& item = itemVM.getItem(i);
+        const auto &it = itemVM.getItem(i);
+        QStandardItem *row = new QStandardItem;
+        listModel->appendRow(row);
+        QModelIndex idx = listModel->index(int(i), 0);
 
-        // Name column
-        QTableWidgetItem *nameItem = new QTableWidgetItem(QString::fromStdString(item.getItemName()));
-        nameItem->setFlags(nameItem->flags() & ~Qt::ItemIsEditable); // Make it non-editable
-        ui->tableWidget->setItem(i, 0, nameItem);
+        QString fullPath = QString::fromStdString(it.getItemName());
+        QString displayName = QFileInfo(fullPath).fileName();
+        auto *w = new SoundItemWidget(fullPath, ui->listView);
 
-        // Status column
-        QTableWidgetItem *statusItem = new QTableWidgetItem(QString::number(item.getItemStatus()));
-        statusItem->setFlags(statusItem->flags() & ~Qt::ItemIsEditable); // Make it non-editable
-        ui->tableWidget->setItem(i, 1, statusItem);
-
-        // Actions column
-        QWidget *actionWidget = new QWidget();
-        QHBoxLayout *actionLayout = new QHBoxLayout(actionWidget);
-        actionLayout->setContentsMargins(0, 0, 0, 0);
-
-        // Edit button
-        QPushButton *editButton = new QPushButton("Edit");
-        actionLayout->addWidget(editButton);
-
-        // Delete button
-        QPushButton *deleteButton = new QPushButton("Delete");
-        actionLayout->addWidget(deleteButton);
-
-        actionWidget->setLayout(actionLayout);
-        ui->tableWidget->setCellWidget(i, 2, actionWidget);
-
-        // Connect Edit button to handleItemEdit
-        connect(editButton, &QPushButton::clicked, this, [this, i]() {
-            handleItemEdit(i);
+        // playback is handled internally by SoundItemWidget
+        connect(w, &SoundItemWidget::deleteRequested, [this, i]() {
+            handleItemDelete(int(i));
         });
 
-        // Connect Delete button to handleItemDelete
-        connect(deleteButton, &QPushButton::clicked, this, [this, i]() {
-            handleItemDelete(i);
-        });
+        ui->listView->setIndexWidget(idx, w);
     }
 }
 
-void MainWindow::handleItemDelete(int row)
+void MainWindow::handleItemDelete(int index)
 {
-    if (itemVM.removeItem(row)) {
-        refreshTable();
+    if (itemVM.removeItem(index)) {
+        refreshList();
     } else {
-        QMessageBox::warning(this, "Error", "Could not delete item.");
+        QMessageBox::warning(this, "Error", "Failed to delete item.");
     }
 }
 
-void MainWindow::handleItemEdit(int row)
+void MainWindow::handleItemEdit(int index)
 {
-    const auto& item = itemVM.getItem(row);
+    QString currentName = QString::fromStdString(itemVM.getItem(index).getItemName());
+    QString newName = QInputDialog::getText(this, "Edit Item", "Enter new name:", QLineEdit::Normal, currentName);
 
-    // Create a dialog for editing
-    QDialog dialog(this);
-    dialog.setWindowTitle("Edit Item");
-
-    QVBoxLayout *layout = new QVBoxLayout(&dialog);
-
-    // Name input
-    QLabel *nameLabel = new QLabel("Name:");
-    QLineEdit *nameEdit = new QLineEdit(QString::fromStdString(item.getItemName()));
-    layout->addWidget(nameLabel);
-    layout->addWidget(nameEdit);
-
-    // Status input
-    QLabel *statusLabel = new QLabel("Status:");
-    QSpinBox *statusSpinBox = new QSpinBox();
-    statusSpinBox->setRange(0, 1); // Assuming status is binary (e.g., 0 or 1)
-    statusSpinBox->setValue(item.getItemStatus());
-    layout->addWidget(statusLabel);
-    layout->addWidget(statusSpinBox);
-
-    // Buttons
-    QDialogButtonBox *buttonBox = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
-    layout->addWidget(buttonBox);
-
-    connect(buttonBox, &QDialogButtonBox::accepted, &dialog, &QDialog::accept);
-    connect(buttonBox, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
-
-    // Show the dialog
-    if (dialog.exec() == QDialog::Accepted) {
-        QString newName = nameEdit->text();
-        int newStatus = statusSpinBox->value();
-
-        // Update the item in the view model
-        if (!itemVM.updateItem(row, newName.toStdString()) ||
-            !itemVM.updateItemStatus(row, newStatus)) {
+    if (!newName.isEmpty()) {
+        if (itemVM.updateItem(index, newName.toStdString())) {
+            refreshList();
+        } else {
             QMessageBox::warning(this, "Error", "Failed to update item.");
         }
-
-        // Refresh the table
-        refreshTable();
     }
 }
 
-void MainWindow::handleItemUpdate(int row, int column)
+void MainWindow::handleItemUpdate(int index, int status)
 {
-    if (column == 0) { // Name column
-        QTableWidgetItem *nameItem = ui->tableWidget->item(row, column);
-        if (nameItem) {
-            QString newName = nameItem->text();
-            if (!itemVM.updateItem(row, newName.toStdString())) {
-                QMessageBox::warning(this, "Error", "Failed to update item name.");
-                refreshTable(); // Revert changes
+    if (itemVM.updateItemStatus(index, status)) {
+        refreshList();
+    } else {
+        QMessageBox::warning(this, "Error", "Failed to update item status.");
+    }
+}
+
+void MainWindow::on_addButton_clicked()
+{
+    QString fileName = QFileDialog::getOpenFileName(
+        this,
+        "Add Sound File",
+        QString(),
+        "Audio Files (*.wav *.mp3 *.ogg)"
+    );
+    if (!fileName.isEmpty()) {
+        item newItem(fileName.toStdString(), 0);
+        itemVM.addItem(newItem);
+        refreshList();
+    }
+}
+
+void MainWindow::chooseAudioOutput()
+{
+    auto devices = QMediaDevices::audioOutputs();
+    QStringList items;
+    for (const auto &d : devices) items << d.description();
+    bool ok;
+    // default to the previously selected device
+    QString currentDesc = SoundItemWidget::audioDevice().description();
+    int currentIndex = items.indexOf(currentDesc);
+    if (currentIndex < 0) currentIndex = 0;
+    QString selected = QInputDialog::getItem(this, "Select Audio Output", "Output Device:", items, currentIndex, false, &ok);
+    if (ok && !selected.isEmpty()) {
+        for (const auto &d : devices) {
+            if (d.description() == selected) {
+                SoundItemWidget::setAudioDevice(d);
+                // save selection
+                QSettings settings("MyCompany", "ToDo");
+                settings.setValue("audioOutput", d.id());
+                break;
             }
         }
-    } else if (column == 1) { // Status column
-        QTableWidgetItem *statusItem = ui->tableWidget->item(row, column);
-        if (statusItem) {
-            bool ok;
-            int newStatus = statusItem->text().toInt(&ok);
-            if (ok) {
-                if (!itemVM.updateItemStatus(row, newStatus)) {
-                    QMessageBox::warning(this, "Error", "Failed to update item status.");
-                    refreshTable(); // Revert changes
-                }
-            } else {
-                QMessageBox::warning(this, "Error", "Invalid status value.");
-                refreshTable(); // Revert changes
-            }
-        }
+        refreshList();
     }
 }
