@@ -22,15 +22,15 @@ public:
 
 private:
     Ui::MainWindow *ui;
-    ItemViewModel itemVM;               // ViewModel instance
-    QStandardItemModel *listModel = nullptr; // Model for QListView
+    ItemViewModel itemVM;       
+    QStandardItemModel *listModel = nullptr;
 
-    // Refresh the list view with the current items from the view model
     void refreshList();
 
 private slots:
 
     void on_addButton_clicked();
+
     void chooseAudioOutput();
 
     void handleItemDelete(int index);
@@ -38,6 +38,8 @@ private slots:
     void handleItemEdit(int index);
 
     void handleItemUpdate(int index, int status);
+
+    void on_stopButton_clicked();
 };
 
 #endif // MAINWINDOW_H

@@ -22,6 +22,9 @@ signals:
     void playRequested();
     void deleteRequested();
 
+public slots:
+    void stop() { m_player->stop(); }
+
 private:
     QString m_fileName;
     QMediaPlayer *m_player;

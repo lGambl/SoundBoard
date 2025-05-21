@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     // connect output action
-    connect(ui->actionOutput, &QAction::triggered, this, &MainWindow::chooseAudioOutput);
+    connect(ui->actionDevices, &QAction::triggered, this, &MainWindow::chooseAudioOutput);
 
     QString appDir = QCoreApplication::applicationDirPath();
     QDir projectRootDir(appDir);
@@ -171,5 +171,16 @@ void MainWindow::chooseAudioOutput()
             }
         }
         refreshList();
+    }
+}
+
+void MainWindow::on_stopButton_clicked()
+{
+    // stop all players, don't delete
+    for (int i = 0; i < listModel->rowCount(); ++i) {
+        QModelIndex idx = listModel->index(i, 0);
+        if (auto *w = qobject_cast<SoundItemWidget*>(ui->listView->indexWidget(idx))) {
+            w->stop();
+        }
     }
 }
