@@ -19,14 +19,12 @@ SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
 
     QLabel *lbl = new QLabel(fileName, this);
 
-    // Play button with standard media icon
     QToolButton *play = new QToolButton(this);
     play->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
     play->setIconSize(QSize(20,20));
     play->setAutoRaise(true);
     play->setToolTip(tr("Play"));
 
-    // Delete button with standard trash icon
     QToolButton *del = new QToolButton(this);
     del->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
     del->setIconSize(QSize(20,20));
