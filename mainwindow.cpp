@@ -153,25 +153,34 @@ void MainWindow::chooseAudioOutput()
 {
     auto devices = QMediaDevices::audioOutputs();
     QStringList items;
-    for (const auto &d : devices) items << d.description();
-    bool ok;
-    // default to the previously selected device
-    QString currentDesc = SoundItemWidget::audioDevice().description();
-    int currentIndex = items.indexOf(currentDesc);
+    for (auto &d : devices)
+        items << d.description();
+
+    bool ok = false;
+    int currentIndex = items.indexOf(SoundItemWidget::audioDevice().description());
     if (currentIndex < 0) currentIndex = 0;
-    QString selected = QInputDialog::getItem(this, "Select Audio Output", "Output Device:", items, currentIndex, false, &ok);
-    if (ok && !selected.isEmpty()) {
-        for (const auto &d : devices) {
-            if (d.description() == selected) {
-                SoundItemWidget::setAudioDevice(d);
-                // save selection
-                QSettings settings("MyCompany", "ToDo");
-                settings.setValue("audioOutput", d.id());
-                break;
-            }
+
+    QString sel = QInputDialog::getItem(
+        this,
+        tr("Select Audio Output"),
+        tr("Output Device:"),
+        items,
+        currentIndex,
+        false,
+        &ok
+    );
+
+    if (!ok || sel.isEmpty()) return;
+
+    // set the QAudioOutput to your chosen device (e.g. VB-Cable)
+    for (auto &d : devices) {
+        if (d.description() == sel) {
+            SoundItemWidget::setAudioDevice(d);
+            QSettings("MyCompany","ToDo").setValue("audioOutput", d.id());
+            break;
         }
-        refreshList();
     }
+    refreshList();
 }
 
 void MainWindow::on_stopButton_clicked()

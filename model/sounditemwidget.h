@@ -14,7 +14,6 @@ class SoundItemWidget : public QWidget {
 public:
     explicit SoundItemWidget(const QString &fileName, QWidget *parent = nullptr);
 
-    // allow selecting output device for all instances
     static void setAudioDevice(const QAudioDevice &device) { m_audioDevice = device; }
     static QAudioDevice audioDevice() { return m_audioDevice; }
 
