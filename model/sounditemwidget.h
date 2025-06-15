@@ -23,12 +23,14 @@ signals:
 
 public slots:
     void stop() { m_player->stop(); }
+    void setVolume(float volume);        // ← new
 
 private:
     QString m_fileName;
     QMediaPlayer *m_player;
     QAudioOutput *m_audioOutput;
     static QAudioDevice m_audioDevice;
+    float m_volume = 1.0f; // Default volume
 };
 
 #endif // SOUNDITEMWIDGET_H

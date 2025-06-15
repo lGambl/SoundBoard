@@ -25,6 +25,12 @@ SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
     play->setAutoRaise(true);
     play->setToolTip(tr("Play"));
 
+    QToolButton *stop = new QToolButton(this);
+    stop->setIcon(style()->standardIcon(QStyle::SP_MediaStop));
+    stop->setIconSize(QSize(20, 20));
+    stop->setAutoRaise(true);
+    stop->setToolTip(tr("Stop"));
+
     QToolButton *del = new QToolButton(this);
     del->setIcon(style()->standardIcon(QStyle::SP_TrashIcon));
     del->setIconSize(QSize(20, 20));
@@ -34,6 +40,7 @@ SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
     lay->addWidget(lbl);
     lay->addStretch();
     lay->addWidget(play);
+    lay->addWidget(stop);
     lay->addWidget(del);
 
     m_audioOutput = new QAudioOutput(this);
@@ -56,5 +63,13 @@ SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
         emit playRequested();
     });
 
+    connect(stop, &QToolButton::clicked, this, &SoundItemWidget::stop);
+
     connect(del, &QToolButton::clicked, this, &SoundItemWidget::deleteRequested);
+}
+
+void SoundItemWidget::setVolume(float volume) {
+    m_volume = volume;
+    if (m_audioOutput)
+        m_audioOutput->setVolume(m_volume);
 }

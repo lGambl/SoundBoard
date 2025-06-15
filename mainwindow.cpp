@@ -42,7 +42,6 @@ MainWindow::MainWindow(QWidget *parent)
         }
     }
 
-    // connect output action
     connect(ui->actionDevices, &QAction::triggered, this, &MainWindow::chooseAudioOutput);
 
     QString appDir = QCoreApplication::applicationDirPath();
@@ -68,6 +67,22 @@ MainWindow::MainWindow(QWidget *parent)
 
         handleItemEdit(itemIndex);
     });
+
+    ui->overallVolume->setRange(0,100);
+    ui->overallVolume->setValue(itemVM.getVolume());
+
+    connect(ui->overallVolume, &QSlider::valueChanged, this, [this](int value) {
+        itemVM.setVolume(value);
+        float vol = value / 100.0f;
+        // update all currently-playing widgets
+        for (int i = 0; i < listModel->rowCount(); ++i) {
+            QModelIndex idx = listModel->index(i, 0);
+            if (auto *w = qobject_cast<SoundItemWidget*>(ui->listView->indexWidget(idx))) {
+                w->setVolume(vol);
+            }
+        }
+    });
+
 }
 
 MainWindow::~MainWindow()
@@ -92,12 +107,12 @@ void MainWindow::refreshList()
         QString fullPath = QString::fromStdString(it.getItemName());
         QString displayName = QFileInfo(fullPath).fileName();
         auto *w = new SoundItemWidget(fullPath, ui->listView);
+        // ← immediately set the “master” volume on any new widget
+        w->setVolume(ui->overallVolume->value() / 100.0f);
 
-        // playback is handled internally by SoundItemWidget
         connect(w, &SoundItemWidget::deleteRequested, [this, i]() {
             handleItemDelete(int(i));
         });
-
         ui->listView->setIndexWidget(idx, w);
     }
 }

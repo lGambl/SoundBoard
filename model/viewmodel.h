@@ -9,7 +9,7 @@ using namespace std;
 class ItemViewModel {
     vector<item> items;
     string filePath;
-
+    int volume = 100; // Default volume
 public:
     ItemViewModel();
 
@@ -23,6 +23,13 @@ public:
     size_t getItemCount() const;
     const item& getItem(size_t index) const;
     vector<item> getAllItems() const;
+
+    int getVolume() const { return volume; }
+    void setVolume(int newVolume) {
+        if (newVolume >= 0 && newVolume <= 100) {
+            volume = newVolume;
+        }
+    }
 
 private:
     void saveToFile();
