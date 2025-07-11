@@ -2,8 +2,6 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QListView>
-#include <QStandardItemModel>
 #include "model/viewmodel.h"
 
 QT_BEGIN_NAMESPACE
@@ -23,7 +21,6 @@ public:
 private:
     Ui::MainWindow *ui;
     ItemViewModel itemVM;       
-    QStandardItemModel *listModel = nullptr;
 
     void refreshList();
 

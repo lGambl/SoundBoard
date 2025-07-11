@@ -19,6 +19,8 @@
 #include <QAudioDevice>
 #include <QAudioOutput>
 #include <QSettings>
+#include <QSize>
+#include <QLineEdit>
 
 #include "model/itemdelegate.h"
 #include "model/sounditemwidget.h"
@@ -28,8 +30,10 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    this->setWindowOpacity(0.9);
+    ui->listWidget->setSpacing(10);
 
-    // load saved audio output device
+    // Load saved audio output device
     {
         QSettings settings("MyCompany", "ToDo");
         QString savedId = settings.value("audioOutput").toString();
@@ -59,30 +63,27 @@ MainWindow::MainWindow(QWidget *parent)
         refreshList();
     }
 
-    connect(ui->listView, &QListView::clicked, this, [this](const QModelIndex &index) {
+    connect(ui->listWidget, &QListWidget::clicked, this, [this](const QModelIndex &index) {
         int itemIndex = index.row();
-        QString itemName = listModel->item(itemIndex)->text();
-        int status = listModel->item(itemIndex)->data(Qt::UserRole).toInt();
+        QString itemName = QString::fromStdString(itemVM.getItem(itemIndex).getItemName());
+        int status = itemVM.getItem(itemIndex).getItemStatus();
         qDebug() << "Item clicked:" << itemName << "Status:" << status;
-
         handleItemEdit(itemIndex);
     });
 
-    ui->overallVolume->setRange(0,100);
+    ui->overallVolume->setRange(0, 100);
     ui->overallVolume->setValue(itemVM.getVolume());
 
     connect(ui->overallVolume, &QSlider::valueChanged, this, [this](int value) {
         itemVM.setVolume(value);
         float vol = value / 100.0f;
-        // update all currently-playing widgets
-        for (int i = 0; i < listModel->rowCount(); ++i) {
-            QModelIndex idx = listModel->index(i, 0);
-            if (auto *w = qobject_cast<SoundItemWidget*>(ui->listView->indexWidget(idx))) {
+        for (int i = 0; i < ui->listWidget->count(); ++i) {
+            QListWidgetItem *item = ui->listWidget->item(i);
+            if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
                 w->setVolume(vol);
             }
         }
     });
-
 }
 
 MainWindow::~MainWindow()
@@ -92,30 +93,38 @@ MainWindow::~MainWindow()
 
 void MainWindow::refreshList()
 {
-    if (!listModel) {
-        listModel = new QStandardItemModel(this);
-        ui->listView->setModel(listModel);
-    }
-    listModel->clear();
+    qDebug() << "Refreshing list. Total items:" << itemVM.getItemCount();
+
+    ui->listWidget->clear();
 
     for (size_t i = 0; i < itemVM.getItemCount(); ++i) {
         const auto &it = itemVM.getItem(i);
-        QStandardItem *row = new QStandardItem;
-        listModel->appendRow(row);
-        QModelIndex idx = listModel->index(int(i), 0);
 
-        QString fullPath = QString::fromStdString(it.getItemName());
-        QString displayName = QFileInfo(fullPath).fileName();
-        auto *w = new SoundItemWidget(fullPath, ui->listView);
-        // ← immediately set the “master” volume on any new widget
+        QString filePath = QString::fromStdString(it.getItemName());
+        QString displayName = QString::fromStdString(it.getDisplayName());
+
+        auto *w = new SoundItemWidget(filePath, displayName, ui->listWidget);
         w->setVolume(ui->overallVolume->value() / 100.0f);
 
-        connect(w, &SoundItemWidget::deleteRequested, [this, i]() {
-            handleItemDelete(int(i));
+        QListWidgetItem *item = new QListWidgetItem;
+        item->setSizeHint(w->sizeHint());
+        ui->listWidget->addItem(item);
+        ui->listWidget->setItemWidget(item, w);
+
+        int itemIndex = static_cast<int>(i);
+
+        connect(w, &SoundItemWidget::deleteRequested, this, [this, itemIndex]() {
+            handleItemDelete(itemIndex);
         });
-        ui->listView->setIndexWidget(idx, w);
+
+        connect(w, &SoundItemWidget::editRequested, this, [this, itemIndex]() {
+            handleItemEdit(itemIndex);
+        });
     }
+
+    ui->listWidget->scrollToBottom();
 }
+
 
 void MainWindow::handleItemDelete(int index)
 {
@@ -151,16 +160,24 @@ void MainWindow::handleItemUpdate(int index, int status)
 
 void MainWindow::on_addButton_clicked()
 {
+    qDebug() << "AddButton clicked";
     QString fileName = QFileDialog::getOpenFileName(
         this,
         "Add Sound File",
         QString(),
         "Audio Files (*.wav *.mp3 *.ogg)"
     );
+
     if (!fileName.isEmpty()) {
-        item newItem(fileName.toStdString(), 0);
+        qDebug() << "Selected file:" << fileName;
+        QString defaultName = QFileInfo(fileName).fileName();
+        QString customName = QInputDialog::getText(this, "Enter Name", "Display Name:", QLineEdit::Normal, defaultName);
+        if (customName.isEmpty()) customName = defaultName;
+
+        item newItem(fileName.toStdString(), 0, customName.toStdString());
         itemVM.addItem(newItem);
         refreshList();
+        ui->statusbar->showMessage(tr("Added item. Total now: %1").arg(itemVM.getItemCount()), 2000);
     }
 }
 
@@ -187,11 +204,10 @@ void MainWindow::chooseAudioOutput()
 
     if (!ok || sel.isEmpty()) return;
 
-    // set the QAudioOutput to your chosen device (e.g. VB-Cable)
     for (auto &d : devices) {
         if (d.description() == sel) {
             SoundItemWidget::setAudioDevice(d);
-            QSettings("MyCompany","ToDo").setValue("audioOutput", d.id());
+            QSettings("MyCompany", "ToDo").setValue("audioOutput", d.id());
             break;
         }
     }
@@ -200,10 +216,9 @@ void MainWindow::chooseAudioOutput()
 
 void MainWindow::on_stopButton_clicked()
 {
-    // stop all players, don't delete
-    for (int i = 0; i < listModel->rowCount(); ++i) {
-        QModelIndex idx = listModel->index(i, 0);
-        if (auto *w = qobject_cast<SoundItemWidget*>(ui->listView->indexWidget(idx))) {
+    for (int i = 0; i < ui->listWidget->count(); ++i) {
+        QListWidgetItem *item = ui->listWidget->item(i);
+        if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
             w->stop();
         }
     }

@@ -6,18 +6,22 @@
 #include <QSize>
 #include <QUrl>
 #include <QMediaDevices>
+#include <QDebug>
 
 typedef QAudioDevice AudioDeviceAlias;
 QAudioDevice SoundItemWidget::m_audioDevice = QMediaDevices::defaultAudioOutput();
 
-SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
+SoundItemWidget::SoundItemWidget(QString filePath, QString displayName, QWidget *parent)
     : QWidget(parent)
-    , m_fileName(fileName)
+    , m_fileName(filePath)
+    , m_displayName(displayName)
 {
     auto *lay = new QHBoxLayout(this);
-    lay->setContentsMargins(5, 2, 5, 2);
+    lay->setSpacing(10);
+    lay->setAlignment(Qt::AlignCenter);
 
-    QLabel *lbl = new QLabel(fileName, this);
+    QLabel *lbl = new QLabel(m_displayName, this);
+    lbl->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
 
     QToolButton *play = new QToolButton(this);
     play->setIcon(style()->standardIcon(QStyle::SP_MediaPlay));
@@ -43,6 +47,10 @@ SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
     lay->addWidget(stop);
     lay->addWidget(del);
 
+    setLayout(lay);
+    setMinimumSize(300, 50);
+    adjustSize();
+
     m_audioOutput = new QAudioOutput(this);
     m_audioOutput->setDevice(SoundItemWidget::audioDevice());
 
@@ -64,7 +72,6 @@ SoundItemWidget::SoundItemWidget(const QString &fileName, QWidget *parent)
     });
 
     connect(stop, &QToolButton::clicked, this, &SoundItemWidget::stop);
-
     connect(del, &QToolButton::clicked, this, &SoundItemWidget::deleteRequested);
 }
 

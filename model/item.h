@@ -5,14 +5,21 @@
 using namespace std;
 
 class item {
-    string what;
+    string filePath;
+    string displayName;
     int stat;
 
 public:
-    item(const string& itemName, int status);
-    bool updateItem(const string& newItem);
+    item(const string& filePath, int status, const string& displayName);
+
+    bool updateItem(const string& newDisplayName);
+
     bool setItemStatus(int status);
+
     string getItemName() const;
+
+    string getDisplayName() const;
+
     int getItemStatus() const;
 };
 

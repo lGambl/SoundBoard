@@ -1,11 +1,11 @@
 #include "item.h"
 
-item::item(const string& itemName, int status)
-    : what(itemName), stat(status) {}
+item::item(const string& filePath, int status, const string& displayName)
+    : filePath(filePath), stat(status), displayName(displayName) {}
 
-bool item::updateItem(const string& newItem) {
-    if (!newItem.empty()) {
-        what = newItem;
+bool item::updateItem(const string& newDisplayName) {
+    if (!newDisplayName.empty()) {
+        displayName = newDisplayName;
         return true;
     }
     return false;
@@ -17,7 +17,11 @@ bool item::setItemStatus(int status) {
 }
 
 string item::getItemName() const {
-    return what;
+    return filePath;
+}
+
+string item::getDisplayName() const {
+    return displayName;
 }
 
 int item::getItemStatus() const {

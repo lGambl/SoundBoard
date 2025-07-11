@@ -8,11 +8,12 @@
 #include <QAudioDevice>
 class QLabel;
 class QPushButton;
+class QMainWindow; // Forward declaration of QMainWindow
 
 class SoundItemWidget : public QWidget {
     Q_OBJECT
 public:
-    explicit SoundItemWidget(const QString &fileName, QWidget *parent = nullptr);
+    explicit SoundItemWidget(QString filePath, QString displayName, QWidget *parent);
 
     static void setAudioDevice(const QAudioDevice &device) { m_audioDevice = device; }
     static QAudioDevice audioDevice() { return m_audioDevice; }
@@ -20,13 +21,15 @@ public:
 signals:
     void playRequested();
     void deleteRequested();
+    void editRequested(); // Added signal for edit action
 
 public slots:
     void stop() { m_player->stop(); }
     void setVolume(float volume);        // ← new
 
 private:
-    QString m_fileName;
+    QString m_fileName;       // actual file path for playback
+    QString m_displayName;    // name shown in UI
     QMediaPlayer *m_player;
     QAudioOutput *m_audioOutput;
     static QAudioDevice m_audioDevice;
