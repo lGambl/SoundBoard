@@ -19,6 +19,7 @@ public:
     bool removeItem(size_t index);
     bool updateItem(size_t index, const string& newName);
     bool updateItemStatus(size_t index, int newStatus);
+    bool updateItemKey(size_t index, int key);
 
     size_t getItemCount() const;
     const item& getItem(size_t index) const;

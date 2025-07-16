@@ -21,11 +21,13 @@ public:
 signals:
     void playRequested();
     void deleteRequested();
-    void editRequested(); // Added signal for edit action
+    void editRequested();
+    void keyBindRequested();
 
 public slots:
     void stop() { m_player->stop(); }
-    void setVolume(float volume);        // ← new
+    void setVolume(float volume);
+    void play();
 
 private:
     QString m_fileName;       // actual file path for playback

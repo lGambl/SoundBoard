@@ -28,13 +28,30 @@ set(PROJECT_SOURCES
     model/filehandler.cpp
     model/sounditemwidget.cpp
     model/sounditemwidget.h
+    model/keybinddialog.h
+    model/keybinddialog.cpp
+    model/hotkeymanager.h
+    model/hotkeymanager.cpp
 )
+
+# Remove FetchContent for QHotkey
+# include(FetchContent)
+# FetchContent_Declare(
+#     QHotkey
+#     GIT_REPOSITORY https://github.com/Skycoder42/QHotkey.git
+#     GIT_TAG        master
+# )
+# FetchContent_MakeAvailable(QHotkey)
+
+# Add local QHotkey subdirectory
+add_subdirectory(external/QHotkey)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(ToDo
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
+    target_link_libraries(ToDo PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia QHotkey)
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET ToDo APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
 #                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
@@ -44,12 +61,14 @@ else()
         add_library(ToDo SHARED
             ${PROJECT_SOURCES}
         )
+        target_link_libraries(ToDo PRIVATE QHotkey)
 # Define properties for Android with Qt 5 after find_package() calls as:
 #    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
         add_executable(ToDo
             ${PROJECT_SOURCES}
         )
+        target_link_libraries(ToDo PRIVATE QHotkey)
     endif()
 endif()
 
@@ -57,6 +76,11 @@ target_link_libraries(ToDo PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Multimedia
 )
+
+# Add QHotkey include directory
+# QHotkey headers are in external/QHotkey/QHotkey
+# This ensures #include <QHotkey> and #include "qhotkey.h" work
+target_include_directories(ToDo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/QHotkey/QHotkey)
 
 # Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
 # If you are developing for iOS or macOS you should consider setting an

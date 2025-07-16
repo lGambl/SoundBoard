@@ -21,9 +21,12 @@
 #include <QSettings>
 #include <QSize>
 #include <QLineEdit>
+#include <QKeyEvent>
 
 #include "model/itemdelegate.h"
 #include "model/sounditemwidget.h"
+#include "model/keybinddialog.h"
+#include "model/hotkeymanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -47,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent)
     }
 
     connect(ui->actionDevices, &QAction::triggered, this, &MainWindow::chooseAudioOutput);
+    connect(ui->actionSetStopAllKey, &QAction::triggered, this, &MainWindow::on_setStopAllKeyButton_clicked);
 
     QString appDir = QCoreApplication::applicationDirPath();
     QDir projectRootDir(appDir);
@@ -84,6 +88,21 @@ MainWindow::MainWindow(QWidget *parent)
             }
         }
     });
+
+    setFocusPolicy(Qt::StrongFocus);
+
+    hotkeyManager = new HotkeyManager(this);
+    connect(hotkeyManager, &HotkeyManager::hotkeyPressed, this, [this](int index) {
+        if (index >= 0 && index < static_cast<int>(itemVM.getItemCount())) {
+            QListWidgetItem *item = ui->listWidget->item(index);
+            if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
+                w->stop();
+                w->setVolume(ui->overallVolume->value() / 100.0f);
+                w->play();
+            }
+        }
+    });
+    connect(hotkeyManager, &HotkeyManager::stopAllPressed, this, &MainWindow::on_stopButton_clicked);
 }
 
 MainWindow::~MainWindow()
@@ -97,6 +116,7 @@ void MainWindow::refreshList()
 
     ui->listWidget->clear();
 
+    if (hotkeyManager) hotkeyManager->unregisterAll();
     for (size_t i = 0; i < itemVM.getItemCount(); ++i) {
         const auto &it = itemVM.getItem(i);
 
@@ -120,7 +140,21 @@ void MainWindow::refreshList()
         connect(w, &SoundItemWidget::editRequested, this, [this, itemIndex]() {
             handleItemEdit(itemIndex);
         });
+
+        connect(w, &SoundItemWidget::keyBindRequested, this, [this, itemIndex]() {
+            KeyBindDialog dlg(this);
+            if (dlg.exec() == QDialog::Accepted) {
+                int key = dlg.getKey();
+                itemVM.updateItemKey(itemIndex, key);
+                refreshList();
+            }
+        });
+
+        int itemKey = itemVM.getItem(i).getKeyBinding();
+        if (itemKey != 0) hotkeyManager->registerHotkey(itemKey, static_cast<int>(i));
     }
+
+    hotkeyManager->registerStopAllHotkey(stopAllKey);
 
     ui->listWidget->scrollToBottom();
 }
@@ -221,5 +255,39 @@ void MainWindow::on_stopButton_clicked()
         if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
             w->stop();
         }
+    }
+}
+
+void MainWindow::keyPressEvent(QKeyEvent *event)
+{
+    int key = event->key();
+    qDebug() << "Key pressed:" << key;
+    if (key == stopAllKey && stopAllKey != 0) {
+        on_stopButton_clicked();
+        return;
+    }
+    for (size_t i = 0; i < itemVM.getItemCount(); ++i) {
+        int itemKey = itemVM.getItem(i).getKeyBinding();
+        qDebug() << "Item" << i << "keybind:" << itemKey;
+        if (itemKey != 0 && itemKey == key) {
+            // Play the sound for this item
+            QListWidgetItem *item = ui->listWidget->item(static_cast<int>(i));
+            if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
+                w->stop();
+                w->setVolume(ui->overallVolume->value() / 100.0f);
+                w->play();
+            }
+            break;
+        }
+    }
+}
+
+void MainWindow::on_setStopAllKeyButton_clicked()
+{
+    bool ok = false;
+    int key = QInputDialog::getInt(this, "Assign Stop All Key", "Press a key (Qt::Key code):", 0, 0, 255, 1, &ok);
+    if (ok) {
+        setStopAllKey(key);
+        if (hotkeyManager) hotkeyManager->registerStopAllHotkey(key);
     }
 }

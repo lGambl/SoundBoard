@@ -8,9 +8,10 @@ class item {
     string filePath;
     string displayName;
     int stat;
+    int keyBinding = 0;
 
 public:
-    item(const string& filePath, int status, const string& displayName);
+    item(const string& filePath, int status, const string& displayName, int keyBinding = 0);
 
     bool updateItem(const string& newDisplayName);
 
@@ -21,6 +22,9 @@ public:
     string getDisplayName() const;
 
     int getItemStatus() const;
+
+    void setKeyBinding(int key) { keyBinding = key; }
+    int getKeyBinding() const { return keyBinding; }
 };
 
 #endif // ITEM_H

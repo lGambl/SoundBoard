@@ -21,16 +21,23 @@ vector<item> FileHandler::loadItemsFromFile(const string& filename) {
         // Read filePath between quotes
         if (getline(iss, path, '"') && getline(iss, path, '"') && iss >> status) {
             string displayName;
+            int keyBinding = 0;
             // Check if displayName is provided
             if (iss >> ws && iss.peek() == '"') {
                 iss.get(); // consume '"'
                 getline(iss, displayName, '"');
+                // Try to read keyBinding if present
+                if (iss >> keyBinding) {
+                    // keyBinding read
+                } else {
+                    keyBinding = 0;
+                }
             } else {
                 // Default displayName to filename
                 size_t pos = path.find_last_of("/\\");
                 displayName = (pos != string::npos) ? path.substr(pos + 1) : path;
             }
-            items.emplace_back(path, status, displayName);
+            items.emplace_back(path, status, displayName, keyBinding);
         } else {
             cerr << "Invalid line format in file: " << line << endl;
         }
@@ -51,7 +58,8 @@ bool FileHandler::saveItemsToFile(const string& filename, const vector<item>& it
     for (const auto& item : items) {
         file << "\"" << item.getItemName() << "\" "
              << item.getItemStatus() << " \""
-             << item.getDisplayName() << "\"" << endl;
+             << item.getDisplayName() << "\" "
+             << item.getKeyBinding() << endl;
     }
     file.close();
     return true;

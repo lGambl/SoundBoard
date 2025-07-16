@@ -1,7 +1,7 @@
 #include "item.h"
 
-item::item(const string& filePath, int status, const string& displayName)
-    : filePath(filePath), stat(status), displayName(displayName) {}
+item::item(const string& filePath, int status, const string& displayName, int keyBinding)
+    : filePath(filePath), stat(status), displayName(displayName), keyBinding(keyBinding) {}
 
 bool item::updateItem(const string& newDisplayName) {
     if (!newDisplayName.empty()) {

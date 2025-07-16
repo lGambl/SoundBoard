@@ -41,11 +41,19 @@ SoundItemWidget::SoundItemWidget(QString filePath, QString displayName, QWidget 
     del->setAutoRaise(true);
     del->setToolTip(tr("Delete"));
 
+    QToolButton *keyBind = new QToolButton(this);
+    keyBind->setIcon(style()->standardIcon(QStyle::SP_DialogYesButton));
+    keyBind->setIconSize(QSize(20, 20));
+    keyBind->setAutoRaise(true);
+    keyBind->setToolTip(tr("Set Key"));
+    keyBind->setText("Set Key");
+
     lay->addWidget(lbl);
     lay->addStretch();
     lay->addWidget(play);
     lay->addWidget(stop);
     lay->addWidget(del);
+    lay->addWidget(keyBind);
 
     setLayout(lay);
     setMinimumSize(300, 50);
@@ -73,10 +81,20 @@ SoundItemWidget::SoundItemWidget(QString filePath, QString displayName, QWidget 
 
     connect(stop, &QToolButton::clicked, this, &SoundItemWidget::stop);
     connect(del, &QToolButton::clicked, this, &SoundItemWidget::deleteRequested);
+    connect(keyBind, &QToolButton::clicked, this, &SoundItemWidget::keyBindRequested);
 }
 
 void SoundItemWidget::setVolume(float volume) {
     m_volume = volume;
     if (m_audioOutput)
         m_audioOutput->setVolume(m_volume);
+}
+
+void SoundItemWidget::play() {
+    if (m_player) {
+        m_player->stop();
+        m_player->setPosition(0);
+        m_player->play();
+        emit playRequested();
+    }
 }

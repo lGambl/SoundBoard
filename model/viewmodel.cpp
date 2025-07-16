@@ -62,6 +62,13 @@ bool ItemViewModel::updateItemStatus(size_t index, int newStatus) {
     return false;
 }
 
+bool ItemViewModel::updateItemKey(size_t index, int key) {
+    if (index >= items.size()) return false;
+    items[index].setKeyBinding(key);
+    saveToFile();
+    return true;
+}
+
 size_t ItemViewModel::getItemCount() const {
     return items.size();
 }
