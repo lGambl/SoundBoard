@@ -18,24 +18,26 @@ vector<item> FileHandler::loadItemsFromFile(const string& filename) {
         istringstream iss(line);
         string path;
         int status;
-        // Read filePath between quotes
+
         if (getline(iss, path, '"') && getline(iss, path, '"') && iss >> status) {
             string displayName;
             int keyBinding = 0;
-            // Check if displayName is provided
+
             if (iss >> ws && iss.peek() == '"') {
-                iss.get(); // consume '"'
+                iss.get();
                 getline(iss, displayName, '"');
-                // Try to read keyBinding if present
-                if (iss >> keyBinding) {
-                    // keyBinding read
-                } else {
+
+                if (!(iss >> keyBinding)) {
                     keyBinding = 0;
                 }
             } else {
-                // Default displayName to filename
                 size_t pos = path.find_last_of("/\\");
                 displayName = (pos != string::npos) ? path.substr(pos + 1) : path;
+            }
+            // Check for empty path
+            if (path.empty()) {
+                cerr << "Skipping item with empty path. Line: " << line << endl;
+                continue;
             }
             items.emplace_back(path, status, displayName, keyBinding);
         } else {
