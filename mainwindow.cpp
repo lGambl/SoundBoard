@@ -38,7 +38,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     // Load saved audio output device
     {
-        QSettings settings("MyCompany", "ToDo");
+        QSettings settings("Gamb", "SoundBoard");
         QString savedId = settings.value("audioOutput").toString();
         auto devices = QMediaDevices::audioOutputs();
         for (const auto &dev : devices) {
