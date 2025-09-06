@@ -8,7 +8,7 @@
 #include <QAudioDevice>
 class QLabel;
 class QPushButton;
-class QMainWindow; // Forward declaration of QMainWindow
+class QMainWindow;
 
 class SoundItemWidget : public QWidget {
     Q_OBJECT
@@ -30,12 +30,12 @@ public slots:
     void play();
 
 private:
-    QString m_fileName;       // actual file path for playback
-    QString m_displayName;    // name shown in UI
+    QString m_fileName;
+    QString m_displayName;
     QMediaPlayer *m_player;
     QAudioOutput *m_audioOutput;
     static QAudioDevice m_audioDevice;
-    float m_volume = 1.0f; // Default volume
+    float m_volume = 1.0f;
 };
 
 #endif // SOUNDITEMWIDGET_H
