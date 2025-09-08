@@ -1,32 +1,7 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
 
-#include <QStringList>
-#include <QDir>
-#include <QDebug>
-#include <QInputDialog>
-#include <QMessageBox>
-#include <QCoreApplication>
-#include <QFile>
-#include <QPushButton>
-#include <QLabel>
-#include <QStandardItemModel>
-#include <QFileDialog>
-#include <QMediaPlayer>
-#include <QUrl>
-#include <QFileInfo>
-#include <QMediaDevices>
-#include <QAudioDevice>
-#include <QAudioOutput>
-#include <QSettings>
-#include <QSize>
-#include <QLineEdit>
-#include <QKeyEvent>
 
-#include "model/itemdelegate.h"
-#include "model/sounditemwidget.h"
-#include "model/keybinddialog.h"
-#include "model/hotkeymanager.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -103,6 +78,8 @@ MainWindow::MainWindow(QWidget *parent)
         }
     });
     connect(hotkeyManager, &HotkeyManager::stopAllPressed, this, &MainWindow::on_stopButton_clicked);
+
+    QTimer::singleShot(0, this, &MainWindow::onWindowInitialized);
 }
 
 MainWindow::~MainWindow()
@@ -324,4 +301,10 @@ if (dlg.exec() == QDialog::Accepted) {
     setStopAllKey(key);
     if (hotkeyManager) hotkeyManager->registerStopAllHotkey(key);
 }
+}
+
+void MainWindow::onWindowInitialized() 
+{
+    if (hotkeyManager) hotkeyManager->registerStopAllHotkey(stopAllKey);
+    refreshList();
 }

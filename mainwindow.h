@@ -2,6 +2,34 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
+
+#include <QStringList>
+#include <QDir>
+#include <QDebug>
+#include <QInputDialog>
+#include <QMessageBox>
+#include <QCoreApplication>
+#include <QFile>
+#include <QPushButton>
+#include <QLabel>
+#include <QStandardItemModel>
+#include <QFileDialog>
+#include <QMediaPlayer>
+#include <QUrl>
+#include <QFileInfo>
+#include <QMediaDevices>
+#include <QAudioDevice>
+#include <QAudioOutput>
+#include <QSettings>
+#include <QSize>
+#include <QLineEdit>
+#include <QKeyEvent>
+#include <QTimer>
+
+#include "model/itemdelegate.h"
+#include "model/sounditemwidget.h"
+#include "model/keybinddialog.h"
+#include "model/hotkeymanager.h"
 #include "model/viewmodel.h"
 #include "model/hotkeymanager.h"
 
@@ -18,6 +46,9 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = nullptr);
     ~MainWindow();
+    void setStopAllKey(int key) { stopAllKey = key; }
+    int getStopAllKey() const { return stopAllKey; }
+
 
 protected:
     void keyPressEvent(QKeyEvent *event) override;
@@ -45,10 +76,9 @@ private slots:
     void on_stopButton_clicked();
 
     void on_setStopAllKeyButton_clicked();
+    
+    void onWindowInitialized(); 
 
-public:
-    void setStopAllKey(int key) { stopAllKey = key; }
-    int getStopAllKey() const { return stopAllKey; }
 };
 
 #endif // MAINWINDOW_H
