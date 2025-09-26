@@ -26,6 +26,8 @@ set(PROJECT_SOURCES
     model/itemdelegate.cpp
     model/filehandler.h
     model/filehandler.cpp
+    model/audiomixer.h
+    model/audiomixer.cpp
     model/sounditemwidget.cpp
     model/sounditemwidget.h
     model/keybinddialog.h

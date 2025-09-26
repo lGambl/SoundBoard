@@ -1,15 +1,11 @@
 #include "sounditemwidget.h"
+#include "audiomixer.h"
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QToolButton>
 #include <QStyle>
 #include <QSize>
-#include <QUrl>
-#include <QMediaDevices>
-#include <QDebug>
-
-typedef QAudioDevice AudioDeviceAlias;
-QAudioDevice SoundItemWidget::m_audioDevice = QMediaDevices::defaultAudioOutput();
+#include <algorithm>
 
 SoundItemWidget::SoundItemWidget(QString filePath, QString displayName, QWidget *parent)
     : QWidget(parent)
@@ -59,23 +55,8 @@ SoundItemWidget::SoundItemWidget(QString filePath, QString displayName, QWidget 
     setMinimumSize(300, 50);
     adjustSize();
 
-    m_audioOutput = new QAudioOutput(this);
-    m_audioOutput->setDevice(SoundItemWidget::audioDevice());
-
-    m_player = new QMediaPlayer(this);
-    m_player->setAudioOutput(m_audioOutput);
-    m_player->setSource(QUrl::fromLocalFile(m_fileName));
-
-    connect(m_player, &QMediaPlayer::mediaStatusChanged, this, [this](QMediaPlayer::MediaStatus status) {
-        if (status == QMediaPlayer::InvalidMedia) {
-            qWarning("Failed to load media: %s", qUtf8Printable(m_fileName));
-        }
-    });
-
     connect(play, &QToolButton::clicked, this, [this]() {
-        m_player->stop();
-        m_player->setPosition(0);
-        m_player->play();
+        AudioMixer::instance().play(m_fileName, m_volume / 100.0f);
         emit playRequested();
     });
 
@@ -84,17 +65,29 @@ SoundItemWidget::SoundItemWidget(QString filePath, QString displayName, QWidget 
     connect(keyBind, &QToolButton::clicked, this, &SoundItemWidget::keyBindRequested);
 }
 
-void SoundItemWidget::setVolume(float volume) {
-    m_volume = volume;
-    if (m_audioOutput)
-        m_audioOutput->setVolume(m_volume);
+void SoundItemWidget::setVolume(float volume)
+{
+    m_volume = std::clamp(volume, 0.0f, 100.0f);
+    AudioMixer::instance().setVolume(m_fileName, m_volume / 100.0f);
 }
 
-void SoundItemWidget::play() {
-    if (m_player) {
-        m_player->stop();
-        m_player->setPosition(0);
-        m_player->play();
-        emit playRequested();
-    }
+void SoundItemWidget::stop()
+{
+    AudioMixer::instance().stop(m_fileName);
+}
+
+void SoundItemWidget::play()
+{
+    AudioMixer::instance().play(m_fileName, m_volume / 100.0f);
+    emit playRequested();
+}
+
+void SoundItemWidget::setAudioDevice(const QAudioDevice &device)
+{
+    AudioMixer::instance().setAudioDevice(device);
+}
+
+QAudioDevice SoundItemWidget::audioDevice()
+{
+    return AudioMixer::instance().audioDevice();
 }

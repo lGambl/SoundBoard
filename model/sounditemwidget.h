@@ -2,9 +2,6 @@
 #define SOUNDITEMWIDGET_H
 
 #include <QWidget>
-#include <QMediaPlayer>
-#include <QAudioOutput>
-#include <QMediaDevices>
 #include <QAudioDevice>
 class QLabel;
 class QPushButton;
@@ -15,8 +12,8 @@ class SoundItemWidget : public QWidget {
 public:
     explicit SoundItemWidget(QString filePath, QString displayName, QWidget *parent);
 
-    static void setAudioDevice(const QAudioDevice &device) { m_audioDevice = device; }
-    static QAudioDevice audioDevice() { return m_audioDevice; }
+    static void setAudioDevice(const QAudioDevice &device);
+    static QAudioDevice audioDevice();
 
 signals:
     void playRequested();
@@ -25,17 +22,14 @@ signals:
     void keyBindRequested();
 
 public slots:
-    void stop() { m_player->stop(); }
+    void stop();
     void setVolume(float volume);
     void play();
 
 private:
     QString m_fileName;
     QString m_displayName;
-    QMediaPlayer *m_player;
-    QAudioOutput *m_audioOutput;
-    static QAudioDevice m_audioDevice;
-    float m_volume = 1.0f;
+    float m_volume = 100.0f;
 };
 
 #endif // SOUNDITEMWIDGET_H

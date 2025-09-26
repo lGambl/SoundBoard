@@ -14,7 +14,7 @@ MainWindow::MainWindow(QWidget *parent)
     // Load saved audio output device
     {
         QSettings settings("Gamb", "SoundBoard");
-        QString savedId = settings.value("audioOutput").toString();
+        QByteArray savedId = settings.value("audioOutput").toByteArray();
         auto devices = QMediaDevices::audioOutputs();
         for (const auto &dev : devices) {
             if (dev.id() == savedId) {
@@ -55,7 +55,7 @@ MainWindow::MainWindow(QWidget *parent)
 
     connect(ui->overallVolume, &QSlider::valueChanged, this, [this](int value) {
         itemVM.setVolume(value);
-        float vol = value / 100.0f;
+        float vol = static_cast<float>(value);
         for (int i = 0; i < ui->listWidget->count(); ++i) {
             QListWidgetItem *item = ui->listWidget->item(i);
             if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
@@ -72,7 +72,7 @@ MainWindow::MainWindow(QWidget *parent)
             QListWidgetItem *item = ui->listWidget->item(index);
             if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
                 w->stop();
-                w->setVolume(ui->overallVolume->value() / 100.0f);
+                w->setVolume(static_cast<float>(ui->overallVolume->value()));
                 w->play();
             }
         }
@@ -131,7 +131,7 @@ void MainWindow::refreshList()
                 qCritical() << "[MainWindow] Failed to create SoundItemWidget for" << filePath;
                 continue;
             }
-            w->setVolume(ui->overallVolume->value() / 100.0f);
+            w->setVolume(static_cast<float>(ui->overallVolume->value()));
 
             QListWidgetItem *item = new QListWidgetItem;
             item->setSizeHint(w->sizeHint());
@@ -250,12 +250,11 @@ void MainWindow::chooseAudioOutput()
 
     if (!ok || sel.isEmpty()) return;
 
-    for (auto &d : devices) {
-        if (d.description() == sel) {
-            SoundItemWidget::setAudioDevice(d);
-            QSettings("MyCompany", "ToDo").setValue("audioOutput", d.id());
-            break;
-        }
+    int selectedIndex = items.indexOf(sel);
+    if (selectedIndex >= 0 && selectedIndex < devices.size()) {
+        const QAudioDevice &device = devices.at(selectedIndex);
+        SoundItemWidget::setAudioDevice(device);
+        QSettings("Gamb", "SoundBoard").setValue("audioOutput", device.id());
     }
     refreshList();
 }
@@ -285,7 +284,7 @@ void MainWindow::keyPressEvent(QKeyEvent *event)
             QListWidgetItem *item = ui->listWidget->item(static_cast<int>(i));
             if (auto *w = qobject_cast<SoundItemWidget*>(ui->listWidget->itemWidget(item))) {
                 w->stop();
-                w->setVolume(ui->overallVolume->value() / 100.0f);
+                w->setVolume(static_cast<float>(ui->overallVolume->value()));
                 w->play();
             }
             break;

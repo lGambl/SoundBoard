@@ -6,96 +6,268 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>798</width>
-    <height>627</height>
+    <width>900</width>
+    <height>640</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>Soundboard Control</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout">
+   <layout class="QVBoxLayout" name="mainLayout">
+    <property name="spacing">
+     <number>12</number>
+    </property>
+    <property name="leftMargin">
+     <number>14</number>
+    </property>
+    <property name="topMargin">
+     <number>14</number>
+    </property>
+    <property name="rightMargin">
+     <number>14</number>
+    </property>
+    <property name="bottomMargin">
+     <number>14</number>
+    </property>
     <item>
-     <widget class="QLabel" name="Volumelabel">
-      <property name="font">
-       <font>
-        <family>Yu Gothic</family>
-        <pointsize>16</pointsize>
-        <bold>true</bold>
-        <strikeout>false</strikeout>
-        <kerning>false</kerning>
-       </font>
+     <widget class="QFrame" name="headerFrame">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
       </property>
-      <property name="text">
-       <string>Volume</string>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
       </property>
-      <property name="textFormat">
-       <enum>Qt::TextFormat::RichText</enum>
+      <property name="styleSheet">
+       <string notr="true">QFrame#headerFrame { background-color: palette(AlternateBase); border-radius: 8px; padding: 12px; }</string>
       </property>
-      <property name="alignment">
-       <set>Qt::AlignmentFlag::AlignCenter</set>
+      <layout class="QHBoxLayout" name="headerLayout">
+       <property name="spacing">
+        <number>10</number>
+       </property>
+       <property name="leftMargin">
+        <number>16</number>
+       </property>
+       <property name="topMargin">
+        <number>12</number>
+       </property>
+       <property name="rightMargin">
+        <number>16</number>
+       </property>
+       <property name="bottomMargin">
+        <number>12</number>
+       </property>
+       <item>
+        <layout class="QVBoxLayout" name="titleLayout">
+         <property name="spacing">
+          <number>4</number>
+         </property>
+         <item>
+          <widget class="QLabel" name="titleLabel">
+           <property name="font">
+            <font>
+             <family>Segoe UI</family>
+             <pointsize>20</pointsize>
+             <bold>true</bold>
+            </font>
+           </property>
+           <property name="text">
+            <string>Soundboard</string>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QLabel" name="subtitleLabel">
+           <property name="styleSheet">
+            <string notr="true">color: palette(Mid);</string>
+           </property>
+           <property name="text">
+            <string>Trigger audio cues instantly, keep sets organized, and monitor levels at a glance.</string>
+           </property>
+           <property name="wordWrap">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </item>
+       <item>
+        <spacer name="headerSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="addButton">
+         <property name="minimumSize">
+          <size>
+           <width>140</width>
+           <height>36</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Add Sound...</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::ListAdd"/>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="controlsFrame">
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QFrame#controlsFrame { background-color: palette(Base); border: 1px solid palette(Dark); border-radius: 8px; }</string>
+      </property>
+      <layout class="QHBoxLayout" name="controlsLayout">
+       <property name="spacing">
+        <number>12</number>
+       </property>
+       <property name="leftMargin">
+        <number>16</number>
+       </property>
+       <property name="topMargin">
+        <number>12</number>
+       </property>
+       <property name="rightMargin">
+        <number>16</number>
+       </property>
+       <property name="bottomMargin">
+        <number>12</number>
+       </property>
+       <item>
+        <widget class="QPushButton" name="stopButton">
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>32</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Stop All</string>
+         </property>
+         <property name="icon">
+          <iconset theme="QIcon::ThemeIcon::MediaPlaybackStop"/>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="controlsSpacer">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QLabel" name="volumeLabel">
+         <property name="text">
+          <string>Master Volume</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSlider" name="overallVolume">
+         <property name="orientation">
+          <enum>Qt::Orientation::Horizontal</enum>
+         </property>
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="pageStep">
+          <number>5</number>
+         </property>
+         <property name="singleStep">
+          <number>1</number>
+         </property>
+         <property name="tickPosition">
+          <enum>QSlider::TicksBelow</enum>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="volumeSpinBox">
+         <property name="minimum">
+          <number>0</number>
+         </property>
+         <property name="maximum">
+          <number>100</number>
+         </property>
+         <property name="suffix">
+          <string>%</string>
+         </property>
+         <property name="value">
+          <number>50</number>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </item>
+    <item>
+     <widget class="QFrame" name="dividerFrame">
+      <property name="frameShape">
+       <enum>QFrame::HLine</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Sunken</enum>
       </property>
      </widget>
     </item>
     <item>
-     <layout class="QHBoxLayout" name="topBarLayout">
-      <item>
-       <widget class="QPushButton" name="addButton">
-        <property name="text">
-         <string>Add</string>
-        </property>
-        <property name="icon">
-         <iconset theme="QIcon::ThemeIcon::ListAdd"/>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QSlider" name="overallVolume">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <spacer name="horizontalSpacer_2">
-        <property name="orientation">
-         <enum>Qt::Orientation::Horizontal</enum>
-        </property>
-        <property name="sizeHint" stdset="0">
-         <size>
-          <width>40</width>
-          <height>20</height>
-         </size>
-        </property>
-       </spacer>
-      </item>
-      <item>
-       <widget class="QPushButton" name="stopButton">
-        <property name="text">
-         <string>Stop</string>
-        </property>
-        <property name="icon">
-         <iconset theme="QIcon::ThemeIcon::MediaPlaybackStop"/>
-        </property>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QLabel" name="hintLabel">
+      <property name="styleSheet">
+       <string notr="true">color: palette(Mid);</string>
+      </property>
+      <property name="text">
+       <string>Double-click a sound to rename, press the assigned hotkey to trigger playback, or right-click for more options.</string>
+      </property>
+      <property name="wordWrap">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
     <item>
-     <widget class="QListWidget" name="listWidget"/>
+     <widget class="QListWidget" name="listWidget">
+      <property name="alternatingRowColors">
+       <bool>true</bool>
+      </property>
+      <property name="uniformItemSizes">
+       <bool>true</bool>
+      </property>
+      <property name="selectionMode">
+       <enum>QAbstractItemView::ExtendedSelection</enum>
+      </property>
+      <property name="spacing">
+       <number>8</number>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">QListWidget { border: 1px solid palette(Dark); border-radius: 6px; padding: 8px; background-color: palette(Base); }</string>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -104,8 +276,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>798</width>
-     <height>33</height>
+     <width>900</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuSettings">
@@ -131,5 +303,39 @@
   </action>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>overallVolume</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>volumeSpinBox</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>609</x>
+     <y>178</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>742</x>
+     <y>178</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>volumeSpinBox</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>overallVolume</receiver>
+   <slot>setValue(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>741</x>
+     <y>178</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>610</x>
+     <y>178</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>
+
