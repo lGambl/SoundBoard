@@ -1,6 +1,6 @@
-# ToDo Soundboard
+# Soundboard
 
-ToDo is a desktop soundboard built with Qt that lets you trigger audio clips from a list or from global hotkeys. Each clip can be given a friendly display name, played or stopped on demand, and assigned to a keyboard shortcut so you can fire sounds even while the app runs in the background.
+`Soundboard` is a desktop soundboard built with Qt that lets you trigger audio clips from a list or via global hotkeys. Each clip can be given a friendly display name, played or stopped on demand, and assigned to a keyboard shortcut so you can fire sounds even while the app runs in the background.
 
 ## Features
 - Play multiple audio clips with per-item widgets and a shared volume slider.
@@ -14,7 +14,7 @@ ToDo is a desktop soundboard built with Qt that lets you trigger audio clips fro
 - Qt 6 (Widgets + Multimedia modules) or Qt 5 with the same modules
 - Git (to fetch the bundled QHotkey dependency)
 
-Tip: Clone the repository with submodules to pull in QHotkey automatically.
+**Tip:** Clone the repository with submodules to pull in QHotkey automatically.
 ```
 git clone --recurse-submodules <repo-url>
 ```
@@ -35,13 +35,13 @@ cmake -S . -B build -DCMAKE_PREFIX_PATH="<qt-prefix>"
 cmake --build build
 ```
 
-Qt Creator users can open the `CMakeLists.txt` directly; the IDE will configure and build the project automatically, reusing the same CMake settings.
+Qt Creator users can open the `CMakeLists.txt` directly; the IDE will configure and build the project automatically, reusing the same CMake settings. The CMake target is named `Soundboard`, so every generator produces a matching executable or bundle.
 
 ## Running
 After a successful build, the executable lives in the build directory:
-- Windows: `build/ToDo.exe`
-- macOS: `build/ToDo.app`
-- Linux: `build/ToDo`
+- Windows: `build/Soundboard.exe`
+- macOS: `build/Soundboard.app`
+- Linux: `build/Soundboard`
 
 Launch the binary and keep `items.txt` in the project root (one level above the build folder) so the app can load your saved clips. Each line in `items.txt` uses the format:
 ```
