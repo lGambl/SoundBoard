@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(ToDo VERSION 0.1 LANGUAGES CXX)
+# Project name -> soundboard
+project(soundboard VERSION 0.1 LANGUAGES CXX)
 
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTOMOC ON)
@@ -8,6 +9,9 @@ set(CMAKE_AUTORCC ON)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+# Use a variable so the target name is consistent everywhere.
+set(APP_TARGET soundboard)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets Multimedia)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets Multimedia)
@@ -36,75 +40,64 @@ set(PROJECT_SOURCES
     model/hotkeymanager.cpp
 )
 
-# Remove FetchContent for QHotkey
-# include(FetchContent)
-# FetchContent_Declare(
-#     QHotkey
-#     GIT_REPOSITORY https://github.com/Skycoder42/QHotkey.git
-#     GIT_TAG        master
-# )
-# FetchContent_MakeAvailable(QHotkey)
-
-# Add local QHotkey subdirectory
+# Add local QHotkey subdirectory (ensure this path exists in your repo)
 add_subdirectory(external/QHotkey)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
-    qt_add_executable(ToDo
+    qt_add_executable(${APP_TARGET}
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
     )
-    target_link_libraries(ToDo PRIVATE Qt${QT_VERSION_MAJOR}::Widgets Qt${QT_VERSION_MAJOR}::Multimedia QHotkey)
-# Define target properties for Android with Qt 6 as:
-#    set_property(TARGET ToDo APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
-#                 ${CMAKE_CURRENT_SOURCE_DIR}/android)
-# For more information, see https://doc.qt.io/qt-6/qt-add-executable.html#target-creation
+    # For Android with Qt6 you could set:
+    # set_property(TARGET ${APP_TARGET} APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR
+    #              ${CMAKE_CURRENT_SOURCE_DIR}/android)
 else()
     if(ANDROID)
-        add_library(ToDo SHARED
+        add_library(${APP_TARGET} SHARED
             ${PROJECT_SOURCES}
         )
-        target_link_libraries(ToDo PRIVATE QHotkey)
-# Define properties for Android with Qt 5 after find_package() calls as:
-#    set(ANDROID_PACKAGE_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/android")
     else()
-        add_executable(ToDo
+        add_executable(${APP_TARGET}
             ${PROJECT_SOURCES}
         )
-        target_link_libraries(ToDo PRIVATE QHotkey)
     endif()
 endif()
 
-target_link_libraries(ToDo PRIVATE
+# Link libraries (Qt + QHotkey)
+target_link_libraries(${APP_TARGET} PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets
     Qt${QT_VERSION_MAJOR}::Multimedia
+    QHotkey
 )
 
-# Add QHotkey include directory
-# QHotkey headers are in external/QHotkey/QHotkey
-# This ensures #include <QHotkey> and #include "qhotkey.h" work
-target_include_directories(ToDo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/external/QHotkey/QHotkey)
+# QHotkey headers live in external/QHotkey/QHotkey
+target_include_directories(${APP_TARGET} PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/external/QHotkey/QHotkey
+)
 
-# Qt for iOS sets MACOSX_BUNDLE_GUI_IDENTIFIER automatically since Qt 6.1.
-# If you are developing for iOS or macOS you should consider setting an
-# explicit, fixed bundle identifier manually though.
+# Bundle / app metadata
 if(${QT_VERSION} VERSION_LESS 6.1.0)
-  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.ToDo)
+  set(BUNDLE_ID_OPTION MACOSX_BUNDLE_GUI_IDENTIFIER com.example.soundboard)
 endif()
-set_target_properties(ToDo PROPERTIES
+
+set_target_properties(${APP_TARGET} PROPERTIES
     ${BUNDLE_ID_OPTION}
+    OUTPUT_NAME soundboard                   # ensures binary name is 'soundboard'
     MACOSX_BUNDLE_BUNDLE_VERSION ${PROJECT_VERSION}
     MACOSX_BUNDLE_SHORT_VERSION_STRING ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
 
+# Install
 include(GNUInstallDirs)
-install(TARGETS ToDo
+install(TARGETS ${APP_TARGET}
     BUNDLE DESTINATION .
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
 
+# Qt6 finalize
 if(QT_VERSION_MAJOR EQUAL 6)
-    qt_finalize_executable(ToDo)
+    qt_finalize_executable(${APP_TARGET})
 endif()

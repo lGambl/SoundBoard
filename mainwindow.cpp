@@ -8,7 +8,6 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    this->setWindowOpacity(0.9);
     ui->listWidget->setSpacing(10);
 
     // Load saved audio output device
